@@ -20,7 +20,7 @@ const (
 // the Twitch API to ensure a pause of 1s between each request.
 //
 // Source: https://gobyexample.com/rate-limiting
-var rateLimiter = time.Tick(1 * time.Second)
+var rateLimiter = time.Tick(5 * time.Second)
 
 // New returns a new service instance.
 func New(client *http.Client) (*Service, error) {
