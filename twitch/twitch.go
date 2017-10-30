@@ -12,15 +12,25 @@ import (
 )
 
 const (
-	basePath   = "https://api.twitch.tv/kraken/"
+	basePath   = "https://api.twitch.tv/helix/"
 	apiVersion = "v5"
+
+	headerRateLimit          = "RateLimit-Limit"
+	headerRateLimitRemaining = "RateLimit-Remaining"
+	headerRateLimitReset     = "RateLimit-Reset"
 )
 
-// This rate limiter should used at the beginning of each method making a request to
-// the Twitch API to ensure a pause of 1s between each request.
+var (
+	errTooManyRequests = errors.New("Rate-limit exceeded")
+)
+
+// This rate limiter (1) should be used at the beginning of each method making a request to
+// the Twitch API to ensure a pause of 500ms between each request.
+// According to the Twitch API documentation we are allowed to make 2 requests per second (2).
 //
-// Source: https://gobyexample.com/rate-limiting
-var rateLimiter = time.Tick(5 * time.Second)
+// Source (1): https://gobyexample.com/rate-limiting
+// Source (2): https://dev.twitch.tv/docs/api#rate-limit
+var rateLimiter = time.Tick(500 * time.Millisecond)
 
 // New returns a new service instance.
 func New(client *http.Client) (*Service, error) {
@@ -29,18 +39,19 @@ func New(client *http.Client) (*Service, error) {
 	}
 
 	s := &Service{client: client, basePath: basePath}
-	s.Channels = NewChannelsService(s)
+	s.Users = NewUsersService(s)
 
 	return s, nil
 }
 
+// Service represents the Twitch API.
 type Service struct {
 	client      *http.Client
 	basePath    string
 	clientID    string
 	accessToken string
 
-	Channels *ChannelsService
+	Users *UsersService
 }
 
 func (s *Service) AccessToken(accessToken string) *Service {
@@ -48,38 +59,28 @@ func (s *Service) AccessToken(accessToken string) *Service {
 	return s
 }
 
-func NewChannelsService(s *Service) *ChannelsService {
-	rs := &ChannelsService{service: s}
-	return rs
+func NewUsersService(s *Service) *UsersService {
+	us := &UsersService{service: s}
+	return us
 }
 
-type ChannelsService struct {
+// UsersService handles communication with the user related methods of the Twitch API.
+type UsersService struct {
 	service *Service
 }
 
-// Channel resource contains information about a Twitch channel.
-type ChannelResponse struct {
-	BroadcasterLanguage          string    `json:"broadcaster_language,omitempty"`
-	BroadcasterType              string    `json:"broadcaster_type,omitempty"`
-	CreatedAt                    time.Time `json:"created_at,omitempty"`
-	DisplayName                  string    `json:"display_name,omitempty"`
-	Email                        string    `json:"email,omitempty"`
-	Followers                    int       `json:"followers,omitempty"`
-	Game                         string    `json:"game,omitempty"`
-	ID                           string    `json:"_id,omitempty"`
-	Language                     string    `json:"language,omitempty"`
-	Logo                         string    `json:"logo,omitempty"`
-	Mature                       bool      `json:"mature,omitempty"`
-	Name                         string    `json:"name,omitempty"`
-	Partner                      bool      `json:"partner,omitempty"`
-	ProfileBanner                string    `json:"profile_banner,omitempty"`
-	ProfileBannerBackgroundColor string    `json:"profile_banner_background_color,omitempty"`
-	Status                       string    `json:"status,omitempty"`
-	StreamKey                    string    `json:"stream_key,omitempty"`
-	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
-	URL                          string    `json:"url,omitempty"`
-	VideoBanner                  string    `json:"video_banner,omitempty"`
-	Views                        int       `json:"views,omitempty"`
+// User represents a Twitch user.
+type User struct {
+	BroadcasterType string `json:"broadcaster_type,omitempty"`
+	Description     string `json:"description,omitempty"`
+	DisplayName     string `json:"display_name,omitempty"`
+	Email           string `json:"email,omitempty"`
+	ID              string `json:"id,omitempty"`
+	Login           string `json:"login,omitempty"`
+	OfflineImageURL string `json:"offline_image_url,omitempty"`
+	ProfileImageURL string `json:"profile_image_url,omitempty"`
+	Type            string `json:"video_banner,omitempty"`
+	ViewCount       int    `json:"view_count,omitempty"`
 }
 
 type ChannelFollowsGetCall struct {
@@ -99,7 +100,7 @@ type ChannelFollowsResponse struct {
 	Total int `json:"_total,omitempty"`
 }
 
-func (r *ChannelsService) Get() *ChannelFollowsGetCall {
+func (r *UsersService) Get() *ChannelFollowsGetCall {
 	c := &ChannelFollowsGetCall{service: r.service, urlParams: make(map[string][]string)}
 	return c
 }
@@ -171,17 +172,6 @@ func (c *ChannelFollowsGetCall) Do() (*ChannelFollowsResponse, error) {
 	}
 
 	return cfr, nil
-}
-
-type User struct {
-	Bio         string    `json:"bio,omitempty"`
-	CreatedAt   time.Time `json:"created_at,omitempty"`
-	DisplayName string    `json:"display_name,omitempty"`
-	ID          string    `json:"_id,omitempty"`
-	Logo        string    `json:"logo,omitempty"`
-	Name        string    `json:"name,omitempty"`
-	Type        string    `json:"type,omitempty"`
-	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 }
 
 // var client = &http.Client{Timeout: 20 * time.Second}
