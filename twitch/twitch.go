@@ -46,7 +46,7 @@ func New(client *http.Client, clientID string) (*Service, error) {
 	}
 
 	s := &Service{client: client, basePath: basePath, clientID: clientID}
-	s.Users = NewUsersService(s)
+	s.Users = &UsersService{service: s}
 
 	return s, nil
 }
@@ -65,10 +65,3 @@ func (s *Service) AccessToken(accessToken string) *Service {
 	s.accessToken = accessToken
 	return s
 }
-
-func NewUsersService(s *Service) *UsersService {
-	us := &UsersService{service: s}
-	return us
-}
-
-// var client = &http.Client{Timeout: 20 * time.Second}
