@@ -25,6 +25,10 @@ type Error struct {
 	Message     string `json:"message"`
 }
 
+type Pagination struct {
+	Cursor string `json:"cursor,omitempty"`
+}
+
 func (e Error) Error() string {
 	return fmt.Sprintf("%v %v error caused by %v",
 		e.Status, e.StatusHuman, e.Message)
