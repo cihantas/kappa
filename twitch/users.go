@@ -13,7 +13,7 @@ import (
 
 // UsersService handles communication with the user related methods of the Twitch API.
 type UsersService struct {
-	service *Service
+	client *Client
 }
 
 // User represents a Twitch user.
@@ -37,13 +37,13 @@ type UsersGetResponse struct {
 
 // Get returns an instance of UsersGetCall.
 func (s *UsersService) Get() *UsersGetCall {
-	c := &UsersGetCall{service: s.service, urlParams: make(map[string][]string)}
+	c := &UsersGetCall{client: s.client, urlParams: make(map[string][]string)}
 	return c
 }
 
 // UsersGetCall represents a GET request to the /users endpoint.
 type UsersGetCall struct {
-	service   *Service
+	client    *Client
 	urlParams url.Values
 }
 
@@ -74,22 +74,16 @@ func (c *UsersGetCall) Logins(logins []string) *UsersGetCall {
 }
 
 func (c *UsersGetCall) Do() (*UsersGetResponse, error) {
-	<-rateLimiter
-
 	// TODO: If no id and login query parameter is specified, try to use the Bearer token.
 
-	reqURL := basePath + "users?" + c.urlParams.Encode()
+	reqURL := c.client.BaseURL.String() + "users?" + c.urlParams.Encode()
 	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
 	//req.Header.Add("Accept", "application/vnd.twitchtv."+apiVersion+"+json")
-	req.Header.Add("Client-ID", c.service.clientID)
-	if c.service.accessToken != "" {
-		req.Header.Add("Authorization", "Bearer "+c.service.accessToken)
-	}
 
-	res, err := c.service.client.Do(req)
+	res, err := c.client.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +127,7 @@ func (c *UsersGetCall) Do() (*UsersGetResponse, error) {
 //}
 //
 //type ChannelFollowsGetCall struct {
-//	service   *Service
+//	client   *Client
 //	urlParams url.Values
 //	channelID string
 //}
@@ -150,7 +144,7 @@ func (c *UsersGetCall) Do() (*UsersGetResponse, error) {
 //}
 //
 //func (r *UsersService) GetFollows() *ChannelFollowsGetCall {
-//	c := &ChannelFollowsGetCall{service: r.service, urlParams: make(map[string][]string)}
+//	c := &ChannelFollowsGetCall{client: r.client, urlParams: make(map[string][]string)}
 //	return c
 //}
 //
@@ -195,9 +189,9 @@ func (c *UsersGetCall) Do() (*UsersGetResponse, error) {
 //		return nil, err
 //	}
 //	req.Header.Add("Accept", "application/vnd.twitchtv."+apiVersion+"+json")
-//	req.Header.Add("Client-ID", c.service.accessToken)
+//	req.Header.Add("Client-ID", c.client.accessToken)
 //
-//	res, err := c.service.client.Do(req)
+//	res, err := c.client.client.Do(req)
 //	if err != nil {
 //		return nil, err
 //	}

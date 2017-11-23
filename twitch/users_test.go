@@ -10,24 +10,24 @@ var client = &http.Client{}
 var clientID = ""
 
 func TestUsersService_Get(t *testing.T) {
-	service, err := New(client, clientID)
+	client, err := NewClient(client)
 	if err != nil {
 		t.Error(err)
 	}
 
-	call := service.Users.Get()
+	call := client.Users.Get()
 	if call == nil {
 		t.Failed()
 	}
 }
 
 func TestChannelFollowsGetCall_Do(t *testing.T) {
-	service, err := New(client, clientID)
+	client, err := NewClient(client, clientID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	call := service.Users.Get()
+	call := client.Users.Get()
 	resp, err := call.ID("44322889").Do()
 	if err != nil {
 		t.Error(err)
