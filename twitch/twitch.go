@@ -20,20 +20,10 @@ var (
 	errTooManyRequests = errors.New("Rate-limit exceeded")
 )
 
-type Error struct {
-	StatusHuman string `json:"error"`
-	Status      int    `json:"status"`
-	Message     string `json:"message"`
-}
-
 type Pagination struct {
 	Cursor string `json:"cursor,omitempty"`
 }
 
-func (e Error) Error() string {
-	return fmt.Sprintf("%v %v error caused by %v",
-		e.Status, e.StatusHuman, e.Message)
-}
 //type Error struct {
 //	StatusHuman string `json:"error"`
 //	Status      int    `json:"status"`
