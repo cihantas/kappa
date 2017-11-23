@@ -32,7 +32,7 @@ type User struct {
 
 // UsersGetResponse ...
 type UsersGetResponse struct {
-	Data []User `json:"data,omitempty"`
+	Data []User `json:"data"`
 }
 
 // Get returns an instance of UsersGetCall.
