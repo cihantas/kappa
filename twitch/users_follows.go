@@ -4,7 +4,7 @@ import "net/url"
 
 // UsersGetCall represents a GET request to the /users endpoint.
 type UsersFollowsGetRequest struct {
-	service   *Service
+	client    *Client
 	urlParams url.Values
 }
 
@@ -22,7 +22,6 @@ type UsersFollowsGetResponse struct {
 }
 
 // Get returns an instance of UsersFollowsGetCall.
-func (s *UsersService) GetFollows() *UsersFollowsGetRequest {
-	c := &UsersFollowsGetRequest{service: s.service, urlParams: make(map[string][]string)}
+func (s *UsersService) GetFollows() *UserFollow[] {
 	return c
 }
