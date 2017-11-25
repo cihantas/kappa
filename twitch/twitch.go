@@ -9,31 +9,11 @@ import (
 )
 
 const (
-	defaultBaseURL = "https://api.twitch.tv/helix/"
+	defaultBaseURL   = "https://api.twitch.tv/helix/"
+	defaultUserAgent = "Kappa Helix"
 
-	//headerRateLimit          = "RateLimit-Limit"
-	//headerRateLimitRemaining = "RateLimit-Remaining"
-	//headerRateLimitReset     = "RateLimit-Reset"
+	acceptHeaderHelix = ""
 )
-
-var (
-	errTooManyRequests = errors.New("Rate-limit exceeded")
-)
-
-type Pagination struct {
-	Cursor string `json:"cursor,omitempty"`
-}
-
-//type Error struct {
-//	StatusHuman string `json:"error"`
-//	Status      int    `json:"status"`
-//	Message     string `json:"message"`
-//}
-//
-//func (e Error) Error() string {
-//	return fmt.Sprintf("%v %v error caused by %v",
-//		e.Status, e.StatusHuman, e.Message)
-//}
 
 // This rate limiter (1) should be used at the beginning of each method making a request to
 // the Twitch API to ensure a pause of 500ms between each request.
@@ -95,4 +75,25 @@ func (t *AuthenticatedTransport) RoundTrip(req *http.Request) (*http.Response, e
 	<-rateLimiter
 
 	return t.Transport.RoundTrip(req)
+}
+
+type Pagination struct {
+	Cursor string `json:"cursor,omitempty"`
+}
+
+func (c *Client) NewRequest(method, urlStr string) (*http.Request, error) {
+	u, err := c.BaseURL.Parse(urlStr)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(method, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", acceptHeaderHelix)
+	//req.Header.Add("Accept", "application/vnd.twitchtv."+apiVersion+"+json")
+	req.Header.Set("User-Agent", defaultUserAgent)
+
+	return req, nil
 }

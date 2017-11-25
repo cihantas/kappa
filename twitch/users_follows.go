@@ -22,6 +22,6 @@ type UsersFollowsGetResponse struct {
 }
 
 // Get returns an instance of UsersFollowsGetCall.
-func (s *UsersService) GetFollows() *UserFollow[] {
-	return c
+func (s *UsersService) GetFollows() *UserFollow {
+	return nil
 }
