@@ -7,10 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-
-	"net/url"
-
-	"github.com/google/go-querystring/query"
 )
 
 // UsersService handles communication with the user related methods of the Twitch API.
@@ -38,23 +34,19 @@ type UsersGetOptions struct {
 	Login []string `url:"login,omitempty"`
 }
 
-// UsersGetResponse ...
+// ...
 type UsersGetResponse struct {
-	Data []User `json:"data"`
+	Data        []User `json:"data"`
+	RawResponse *http.Response
 }
 
 // Get returns an instance of UsersGetCall.
 func (s *UsersService) Get(opt *UsersGetOptions) (*[]User, *http.Response, error) {
 	// Build url.
-	q, err := query.Values(opt)
+	u, err := buildURL("users", opt)
 	if err != nil {
 		return nil, nil, err
 	}
-	u, err := url.Parse("users")
-	if err != nil {
-		return nil, nil, err
-	}
-	u.RawQuery = q.Encode()
 
 	req, err := s.client.NewRequest("GET", u.String())
 	if err != nil {
@@ -82,7 +74,7 @@ func (s *UsersService) Get(opt *UsersGetOptions) (*[]User, *http.Response, error
 		return nil, nil, errors.New("Status code not 200, it is " + strconv.Itoa(res.StatusCode))
 	}
 
-	ur := &UsersGetResponse{}
+	ur := &usersFollowsGetResponse{}
 	if err := json.NewDecoder(res.Body).Decode(ur); err != nil {
 		return nil, nil, err
 	}
