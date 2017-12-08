@@ -2,11 +2,8 @@ package twitch
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 )
 
 // UsersService handles communication with the user related methods of the Twitch API.
@@ -41,14 +38,13 @@ type UsersGetResponse struct {
 }
 
 // Get returns an instance of UsersGetCall.
-func (s *UsersService) Get(opt *UsersGetOptions) (*[]User, *http.Response, error) {
-	// Build url.
+func (s *UsersService) Get(opt *UsersGetOptions) (*[]User, *UsersGetResponse, error) {
 	u, err := buildURL("users", opt)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	req, err := s.client.NewRequest("GET", u.String())
+	req, err := s.client.newRequest("GET", u.String())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -59,26 +55,21 @@ func (s *UsersService) Get(opt *UsersGetOptions) (*[]User, *http.Response, error
 	}
 	defer res.Body.Close()
 
-	// TODO
-	if res.StatusCode != 200 && res.StatusCode < 500 {
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, nil, err
-		}
-		fmt.Println(string(body))
-
-		statusCodeString := strconv.Itoa(res.StatusCode)
-		fmt.Println()
-		return nil, nil, errors.New("Status code not 200, it is " + statusCodeString)
-	} else if res.StatusCode >= 500 {
-		return nil, nil, errors.New("Status code not 200, it is " + strconv.Itoa(res.StatusCode))
-	}
-
-	ur := &usersFollowsGetResponse{}
-	if err := json.NewDecoder(res.Body).Decode(ur); err != nil {
+	if err = checkResponse(res); err != nil {
 		return nil, nil, err
 	}
 
-	return &ur.Data, res, nil
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ugr := &UsersGetResponse{}
+	if err := json.Unmarshal(bodyBytes, ugr); err != nil {
+		return nil, nil, err
+	}
+	ugr.RawResponse = res
+
+	return &ugr.Data, ugr, nil
 	// TODO: If no id and login query parameter is specified, try to use the Bearer token.
 }

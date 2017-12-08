@@ -15,8 +15,7 @@ func TestNewAuthenticatedClient(t *testing.T) {
 		},
 	}
 	httpClient := &http.Client{Transport: at}
-	_, err := NewClient(httpClient)
-	if err != nil {
+	if _, err := NewClient(httpClient); err != nil {
 		t.Failed()
 	}
 }

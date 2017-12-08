@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"os"
+
 	"fmt"
 
 	"github.com/cihantas/kappa/twitch"
@@ -11,8 +13,8 @@ import (
 
 func main() {
 	at := &twitch.AuthenticatedTransport{
-		ClientID:     "",
-		ClientSecret: "",
+		ClientID:     os.Getenv("TWITCH_CLIENT_ID"),
+		ClientSecret: os.Getenv("TWITCH_CLIENT_SECRET"),
 		Transport: &http.Transport{
 			IdleConnTimeout: 30 * time.Second,
 		},
@@ -25,10 +27,11 @@ func main() {
 	opts := &twitch.UsersGetOptions{
 		Login: []string{"devvv", "killinginpink"},
 	}
-	users, resp, err := client.Users.Get(opts)
+	_, resp, err := client.Users.Get(opts)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Users: %v", users)
-	fmt.Printf("Response: %v", resp)
+	//fmt.Printf("Users: %v", users)
+	fmt.Printf("RateLimit-Remaining: %s\n", resp.RawResponse.Header.Get("RateLimit-Remaining"))
+	fmt.Printf("Status Code: %d\n", resp.RawResponse.StatusCode)
 }

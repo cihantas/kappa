@@ -2,11 +2,8 @@ package twitch
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 )
 
 // UserFollow represents a follow relationship between to Twitch users.
@@ -39,7 +36,7 @@ func (s *UsersService) ListFollows(opt *UserFollowsGetOptions) (*[]UserFollow, *
 		return nil, nil, err
 	}
 
-	req, err := s.client.NewRequest("GET", u.String())
+	req, err := s.client.newRequest("GET", u.String())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -50,26 +47,21 @@ func (s *UsersService) ListFollows(opt *UserFollowsGetOptions) (*[]UserFollow, *
 	}
 	defer res.Body.Close()
 
-	// TODO
-	if res.StatusCode != 200 && res.StatusCode < 500 {
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, nil, err
-		}
-		fmt.Println(string(body))
-
-		statusCodeString := strconv.Itoa(res.StatusCode)
-		fmt.Println()
-		return nil, nil, errors.New("Status code not 200, it is " + statusCodeString)
-	} else if res.StatusCode >= 500 {
-		return nil, nil, errors.New("Status code not 200, it is " + strconv.Itoa(res.StatusCode))
-	}
-
-	r := &UsersFollowsGetResponse{}
-	if err := json.NewDecoder(res.Body).Decode(r); err != nil {
+	if err = checkResponse(res); err != nil {
 		return nil, nil, err
 	}
 
-	return &r.Data, r, nil
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ufgr := &UsersFollowsGetResponse{}
+	if err := json.Unmarshal(bodyBytes, ufgr); err != nil {
+		return nil, nil, err
+	}
+	ufgr.RawResponse = res
+
+	return &ufgr.Data, ufgr, nil
 	// TODO: If no id and login query parameter is specified, try to use the Bearer token.
 }

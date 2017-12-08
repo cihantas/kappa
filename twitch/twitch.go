@@ -14,11 +14,11 @@ const (
 	defaultBaseURL   = "https://api.twitch.tv/helix/"
 	defaultUserAgent = "Kappa Helix"
 
-	//acceptHeaderHelix = "application/vnd.twitchtv.helix+json"
-	acceptHeaderHelix = "application/json"
+	acceptHeaderHelix = "application/vnd.twitchtv.helix+json"
+	// acceptHeaderHelix = "application/json"
 )
 
-// This rate limiter (1) should be used at the beginning of each method making a request to
+// This rate limiter (1) is used at the beginning of each request to
 // the Twitch API to ensure a pause of 500ms between each request.
 // According to the Twitch API documentation we are allowed to make 2 requests per second (2).
 //
@@ -60,6 +60,7 @@ func NewClient(client *http.Client) (*Client, error) {
 type AuthenticatedTransport struct {
 	ClientID     string
 	ClientSecret string
+	AccessToken  string
 	Transport    http.RoundTripper
 }
 
@@ -73,7 +74,9 @@ func (t *AuthenticatedTransport) RoundTrip(req *http.Request) (*http.Response, e
 
 	// TODO: Copy request as required by RoundTripper interface.
 	req.Header.Set("Client-ID", t.ClientID)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", t.ClientID))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", t.AccessToken))
+
+	fmt.Printf("%+v\n", req)
 
 	if t.Transport == nil {
 		t.Transport = http.DefaultTransport
@@ -84,7 +87,7 @@ func (t *AuthenticatedTransport) RoundTrip(req *http.Request) (*http.Response, e
 	return t.Transport.RoundTrip(req)
 }
 
-func (c *Client) NewRequest(method, urlStr string) (*http.Request, error) {
+func (c *Client) newRequest(method, urlStr string) (*http.Request, error) {
 	u, err := c.BaseURL.Parse(urlStr)
 	if err != nil {
 		return nil, err
@@ -112,4 +115,12 @@ func buildURL(rawUrl string, opt interface{}) (*url.URL, error) {
 	u.RawQuery = q.Encode()
 
 	return u, nil
+}
+
+func checkResponse(res *http.Response) error {
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return errors.New(fmt.Sprintf("Status code is %d", res.StatusCode))
+	}
+
+	return nil
 }
