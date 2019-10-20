@@ -1,3 +1,7 @@
+WIP: This library is still in its early alpha and not ready for use in production.
+
+---
+
 <img align="left" height="128" src="./kappa.png">
 
 # Kappa
