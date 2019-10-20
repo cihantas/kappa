@@ -2,7 +2,7 @@ WIP: This library is still in its early alpha and not ready for use in productio
 
 ---
 
-<img align="left" height="128" src="./kappa.png">
+<img align="left" height="96" src="./kappa.png">
 
 # Kappa
 
